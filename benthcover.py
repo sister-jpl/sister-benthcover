@@ -14,16 +14,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
-import sys
 import argparse
 from joblib import load
 import hytools_lite as htl
+from hytools_lite.io import WriteENVI
+import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 
 CLASSES =  ['algae','coral','mud/sand','seagrass']
 N_CLASSES = len(CLASSES)
-
 
 def progbar(curr, total, full_progbar = 100):
     '''Display progress bar.
@@ -50,6 +50,9 @@ def main():
     parser.add_argument('--prob', action='store_true',
                         help='Export probabilities')
 
+    args = parser.parse_args()
+
+
     ###############
     ##Testing
     # parser = argparse.ArgumentParser()
@@ -62,7 +65,6 @@ def main():
 
     root_dir =os.path.realpath(os.path.split(__file__)[0])
     classifier_file = root_dir + '/data/%s_4class_benthcover.joblib' % args.model
-    classifier_waves = np.arange(430,671,10)
     classifier = load(classifier_file)
 
     #Load benthic reflectance image
@@ -70,7 +72,7 @@ def main():
     ben_rfl.read_file(args.input,'envi')
     iterator =ben_rfl.iterate(by = 'chunk',chunk_size = (200,200))
 
-    probability = np.full((img.lines,img.columns,N_CLASSES),-1)
+    probability = np.full((ben_rfl.lines,ben_rfl.columns,N_CLASSES),-1)
 
     i = 0
     while not iterator.complete:
@@ -92,7 +94,7 @@ def main():
             progbar(i,ben_rfl.lines*ben_rfl.columns, full_progbar = 100)
 
     out_header = ben_rfl.get_header()
-    out_header['bands']= n_classes
+    out_header['bands']= N_CLASSES
     out_header['wavelength']= []
     out_header['fwhm']= []
 
@@ -101,7 +103,7 @@ def main():
         out_header['band names'] = CLASSES
         prob_file = args.out_dir + '/' + ben_rfl.base_name.replace('Rb','cover_prob')
         writer = WriteENVI(prob_file,out_header)
-        for band in range(n_classes):
+        for band in range(N_CLASSES):
             writer.write_band(probability[:,:,band],band)
 
     # Export cover map
@@ -116,7 +118,7 @@ def main():
     writer.write_band(class_max,0)
 
 if __name__ == "__main__":
-  main()
+    main()
 
 
 
