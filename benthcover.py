@@ -45,7 +45,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('input', type=str)
     parser.add_argument('out_dir', type=str)
-    parser.add_argument('--model',  type=str, default = 'ranfor', choices = ['ranfor','logreg'])
+    parser.add_argument('--model',  type=str, default = 'logreg', choices = ['logreg'])
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--prob', action='store_true',
                         help='Export probabilities')
