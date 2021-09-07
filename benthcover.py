@@ -20,7 +20,6 @@ import hytools_lite as htl
 from hytools_lite.io import WriteENVI
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
 
 CLASSES =  ['algae','coral','mud/sand','seagrass']
 N_CLASSES = len(CLASSES)
@@ -45,26 +44,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('input', type=str)
     parser.add_argument('out_dir', type=str)
-    parser.add_argument('--model',  type=str, default = 'logreg', choices = ['logreg'])
+    parser.add_argument('--depth',  type=str, default = None)
+    parser.add_argument('--level',  type=int, default = 1, choices = [1,2])
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--prob', action='store_true',
                         help='Export probabilities')
 
     args = parser.parse_args()
 
-
-    ###############
-    ##Testing
-    # parser = argparse.ArgumentParser()
-    # args = parser.parse_args([])
-    # args.input = '/data2/desis/l2/DESIS_DT0595258704_002-20210604T122041-V0213_modtran/DESIS_DT0595258704_002-20210604T122041-V0213_rfl_prj_rfl_10nm_Rb'
-    # args.out_dir ='/data2/temp/bethos_aop_testing/'
-    # args.model ='ranfor'
-    # args.verbose = True
-    # args.prob = True
-
     root_dir =os.path.realpath(os.path.split(__file__)[0])
-    classifier_file = root_dir + '/data/%s_4class_benthcover.joblib' % args.model
+    classifier_file = root_dir + '/data/logreg_l%s_benthcover.joblib' % args.level
     classifier = load(classifier_file)
 
     #Load benthic reflectance image
@@ -93,15 +82,24 @@ def main():
         if args.verbose:
             progbar(i,ben_rfl.lines*ben_rfl.columns, full_progbar = 100)
 
+    #Use depth image to mask below 5m
+    if args.depth:
+        depth = htl.HyTools()
+        depth.read_file(args.depth,'envi')
+        probability[depth.get_band(0) > 5] = -9999
+
+    print('\n')
+
     out_header = ben_rfl.get_header()
-    out_header['bands']= N_CLASSES
     out_header['wavelength']= []
     out_header['fwhm']= []
+    out_header['bands']= N_CLASSES
+    out_header['data ignore value'] = -9999
 
     # Export probabilities for each cover class
     if args.prob:
         out_header['band names'] = CLASSES
-        prob_file = args.out_dir + '/' + ben_rfl.base_name.replace('Rb','cover_prob')
+        prob_file = args.out_dir + '/' +  ben_rfl.base_name + '_cover_prob'
         writer = WriteENVI(prob_file,out_header)
         for band in range(N_CLASSES):
             writer.write_band(probability[:,:,band],band)
@@ -111,7 +109,7 @@ def main():
     out_header['class names'] = CLASSES
     out_header['band names'] = ['benthic_cover']
 
-    cover_file = args.out_dir + '/' + ben_rfl.base_name.replace('Rb','cover_class')
+    cover_file = args.out_dir + '/' + ben_rfl.base_name + '_cover_class'
     writer = WriteENVI(cover_file,out_header)
     class_max = probability.argmax(axis=2)
     class_max[probability[:,:,0] == -9999] = -9999
@@ -119,8 +117,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
