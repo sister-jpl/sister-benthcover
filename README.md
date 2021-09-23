@@ -7,7 +7,7 @@ Classify benthic reflectance into four benthic cover classes:
 - Mud/sand
 - Seagrass
 
-Takes as input bethnic reflectance images with wavelength range 430 to 670 nm, with 10 nm spectral sampling interval.
+Takes as input a benthic reflectance image with wavelength range 430 to 670 nm, with 10 nm spectral sampling interval.
 
 ## Installation
 
