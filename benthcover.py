@@ -16,8 +16,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import argparse
 from joblib import load
-import hytools_lite as htl
-from hytools_lite.io import WriteENVI
+import hytools as ht
+from hytools.io import WriteENVI
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 
@@ -57,7 +57,7 @@ def main():
     classifier = load(classifier_file)
 
     #Load benthic reflectance image
-    ben_rfl = htl.HyTools()
+    ben_rfl = ht.HyTools()
     ben_rfl.read_file(args.input,'envi')
     iterator =ben_rfl.iterate(by = 'chunk',chunk_size = (200,200))
 
@@ -84,7 +84,7 @@ def main():
 
     #Use depth image to mask below 5m
     if args.depth:
-        depth = htl.HyTools()
+        depth = ht.HyTools()
         depth.read_file(args.depth,'envi')
         probability[depth.get_band(0) > 5] = -9999
 
