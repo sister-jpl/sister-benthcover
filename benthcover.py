@@ -82,11 +82,11 @@ def main():
         if args.verbose:
             progbar(i,ben_rfl.lines*ben_rfl.columns, full_progbar = 100)
 
-    #Use depth image to mask below 5m
+    #Use depth image to mask below optically deep water
     if args.depth:
         depth = ht.HyTools()
         depth.read_file(args.depth,'envi')
-        probability[depth.get_band(0) > 5] = -9999
+        probability[~depth.mask['no_data']] = -9999
 
     print('\n')
 
