@@ -86,7 +86,7 @@ def main():
     if args.depth:
         depth = ht.HyTools()
         depth.read_file(args.depth,'envi')
-        probability[~depth.mask['no_data']] = -9999
+        probability[(~depth.mask['no_data']) | (depth.get_band(0) > 5)] = -9999
 
     print('\n')
 
