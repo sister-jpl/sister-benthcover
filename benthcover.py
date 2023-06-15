@@ -19,7 +19,6 @@ from joblib import load
 import hytools as ht
 from hytools.io import WriteENVI
 import numpy as np
-from sklearn.linear_model import LogisticRegression
 
 CLASSES =  ['algae','coral','mud/sand','seagrass']
 N_CLASSES = len(CLASSES)
@@ -44,7 +43,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('input', type=str)
     parser.add_argument('out_dir', type=str)
-    parser.add_argument('--depth',  type=str, default = None)
     parser.add_argument('--level',  type=int, default = 1, choices = [1,2])
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--prob', action='store_true',
@@ -81,12 +79,6 @@ def main():
         i+=prob.shape[0]*prob.shape[1]
         if args.verbose:
             progbar(i,ben_rfl.lines*ben_rfl.columns, full_progbar = 100)
-
-    #Use depth image to mask below optically deep water
-    if args.depth:
-        depth = ht.HyTools()
-        depth.read_file(args.depth,'envi')
-        probability[(~depth.mask['no_data']) | (depth.get_band(0) > 5)] = -9999
 
     print('\n')
 
